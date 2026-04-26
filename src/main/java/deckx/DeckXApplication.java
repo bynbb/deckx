@@ -1,8 +1,10 @@
 package deckx;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 public class DeckXApplication {
     static final String INPUT_FILE = "test_data_presentation.pptx";
@@ -11,15 +13,43 @@ public class DeckXApplication {
     private final Path workingFolder;
     private final PrintStream output;
     private final PrintStream error;
+    private final PptxReader pptxReader;
+    private final TextArtifactGenerator textArtifactGenerator;
+    private final ImageArtifactGenerator imageArtifactGenerator;
+    private final OutputFolderCleaner outputFolderCleaner;
+    private final OutputWriter outputWriter;
 
     public DeckXApplication() {
-        this(Path.of("."), System.out, System.err);
+        this(
+                Path.of("."),
+                System.out,
+                System.err,
+                new PptxReader(),
+                new TextArtifactGenerator(),
+                new ImageArtifactGenerator(),
+                new OutputFolderCleaner(),
+                new OutputWriter()
+        );
     }
 
-    DeckXApplication(Path workingFolder, PrintStream output, PrintStream error) {
+    DeckXApplication(
+            Path workingFolder,
+            PrintStream output,
+            PrintStream error,
+            PptxReader pptxReader,
+            TextArtifactGenerator textArtifactGenerator,
+            ImageArtifactGenerator imageArtifactGenerator,
+            OutputFolderCleaner outputFolderCleaner,
+            OutputWriter outputWriter
+    ) {
         this.workingFolder = workingFolder;
         this.output = output;
         this.error = error;
+        this.pptxReader = pptxReader;
+        this.textArtifactGenerator = textArtifactGenerator;
+        this.imageArtifactGenerator = imageArtifactGenerator;
+        this.outputFolderCleaner = outputFolderCleaner;
+        this.outputWriter = outputWriter;
     }
 
     public static void main(String[] args) {
@@ -39,6 +69,21 @@ public class DeckXApplication {
             return 1;
         }
 
-        return 0;
+        try {
+            Path outputFolder = workingFolder.resolve(OUTPUT_FOLDER);
+
+            // The runtime turns the golden example deck into PowerPoint-independent text and image artifacts.
+            List<SlideRecord> slides = pptxReader.readSlides(inputFile);
+            List<GeneratedTextArtifact> textArtifacts = textArtifactGenerator.generate(slides);
+            List<GeneratedImageArtifact> imageArtifacts = imageArtifactGenerator.generate(slides);
+
+            outputFolderCleaner.clean(outputFolder);
+            outputWriter.write(outputFolder, textArtifacts, imageArtifacts);
+
+            return 0;
+        } catch (IOException exception) {
+            error.println("DeckX failed: " + exception.getMessage());
+            return 1;
+        }
     }
 }

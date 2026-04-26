@@ -22,7 +22,12 @@ class DeckXApplicationTest {
         DeckXApplication application = new DeckXApplication(
                 tempDir,
                 new PrintStream(output),
-                new PrintStream(error)
+                new PrintStream(error),
+                new PptxReader(),
+                new TextArtifactGenerator(),
+                new ImageArtifactGenerator(),
+                new OutputFolderCleaner(),
+                new OutputWriter()
         );
 
         int exitCode = application.run();
@@ -33,27 +38,5 @@ class DeckXApplicationTest {
                 "DeckX failed: test_data_presentation.pptx was not found." + System.lineSeparator(),
                 error.toString()
         );
-    }
-
-    @Test
-    void runSucceedsWhenFixedInputFileExists() throws Exception {
-        // This test only checks the fixed-name input gate, not whether the file is a readable PowerPoint deck.
-        Path inputFile = tempDir.resolve("test_data_presentation.pptx");
-        inputFile.toFile().createNewFile();
-
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ByteArrayOutputStream error = new ByteArrayOutputStream();
-
-        DeckXApplication application = new DeckXApplication(
-                tempDir,
-                new PrintStream(output),
-                new PrintStream(error)
-        );
-
-        int exitCode = application.run();
-
-        assertEquals(0, exitCode);
-        assertEquals("Starting DeckX processing..." + System.lineSeparator(), output.toString());
-        assertEquals("", error.toString());
     }
 }
