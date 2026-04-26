@@ -47,4 +47,19 @@ class OutputFolderCleanerTest {
         assertFalse(Files.exists(oldTextFile));
         assertFalse(Files.exists(oldNestedFolder));
     }
+
+    @Test
+    void cleanKeepsWindowsMetadataFile() throws Exception {
+        // DeckX ignores Windows metadata because File Explorer may lock Thumbs.db during reruns.
+        Path outputFolder = tempDir.resolve("test_data_presentation");
+        Files.createDirectories(outputFolder);
+
+        Path windowsMetadataFile = outputFolder.resolve("Thumbs.db");
+        Files.writeString(windowsMetadataFile, "windows metadata");
+
+        OutputFolderCleaner cleaner = new OutputFolderCleaner();
+        cleaner.clean(outputFolder);
+
+        assertTrue(Files.exists(windowsMetadataFile));
+    }
 }

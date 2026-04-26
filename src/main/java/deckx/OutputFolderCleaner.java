@@ -19,12 +19,18 @@ class OutputFolderCleaner {
     }
 
     private void deleteRecursively(Path path) throws IOException {
+        if ("Thumbs.db".equalsIgnoreCase(path.getFileName().toString())) {
+            return;
+        }
+
         if (Files.isDirectory(path)) {
             try (var descendants = Files.walk(path)) {
                 for (Path descendant : descendants
                         .sorted(Comparator.reverseOrder())
                         .toList()) {
-                    Files.deleteIfExists(descendant);
+                    if (!"Thumbs.db".equalsIgnoreCase(descendant.getFileName().toString())) {
+                        Files.deleteIfExists(descendant);
+                    }
                 }
             }
         } else {
@@ -32,3 +38,4 @@ class OutputFolderCleaner {
         }
     }
 }
+
