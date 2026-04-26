@@ -47,6 +47,9 @@ class DeckXApplicationWorkflowTest {
         assertTrue(output.toString().contains("Processing complete."));
         assertTrue(output.toString().contains("Output folder: test_data_presentation"));
         assertTrue(output.toString().contains("Generated files: "));
+        assertTrue(output.toString().contains("Generating text files..."));
+        assertTrue(output.toString().contains("Generating image files..."));
+        assertTrue(output.toString().contains("Writing output files..."));
         assertTrue(Files.isDirectory(outputFolder));
         assertTrue(Files.isRegularFile(outputFolder.resolve("slide_01__title.txt")));
         assertTrue(Files.isRegularFile(outputFolder.resolve("slide_01__author.txt")));

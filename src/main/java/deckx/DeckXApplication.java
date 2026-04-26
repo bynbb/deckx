@@ -74,9 +74,14 @@ public class DeckXApplication {
 
             // The runtime turns the golden example deck into PowerPoint-independent text and image artifacts.
             List<SlideRecord> slides = pptxReader.readSlides(inputFile);
+
+            output.println("Generating text files...");
             List<GeneratedTextArtifact> textArtifacts = textArtifactGenerator.generate(slides);
+
+            output.println("Generating image files...");
             List<GeneratedImageArtifact> imageArtifacts = imageArtifactGenerator.generate(slides);
 
+            output.println("Writing output files...");
             outputFolderCleaner.clean(outputFolder);
             outputWriter.write(outputFolder, textArtifacts, imageArtifacts);
 
