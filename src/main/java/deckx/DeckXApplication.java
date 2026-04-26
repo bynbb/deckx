@@ -80,6 +80,12 @@ public class DeckXApplication {
             outputFolderCleaner.clean(outputFolder);
             outputWriter.write(outputFolder, textArtifacts, imageArtifacts);
 
+            // Completion reporting confirms the PowerPoint-independent output location and artifact count.
+            int generatedFileCount = textArtifacts.size() + imageArtifacts.size();
+            output.println("Processing complete.");
+            output.println("Output folder: " + OUTPUT_FOLDER);
+            output.println("Generated files: " + generatedFileCount);
+
             return 0;
         } catch (IOException exception) {
             error.println("DeckX failed: " + exception.getMessage());
