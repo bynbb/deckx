@@ -69,12 +69,19 @@ public class DeckXApplication {
             return 1;
         }
 
+        List<SlideRecord> slides;
+
+        try {
+            slides = pptxReader.readSlides(inputFile);
+        } catch (Exception exception) {
+            error.println("DeckX failed: " + INPUT_FILE + " could not be opened for reading.");
+            return 1;
+        }
+
         try {
             Path outputFolder = workingFolder.resolve(OUTPUT_FOLDER);
 
             // The runtime turns the golden example deck into PowerPoint-independent text and image artifacts.
-            List<SlideRecord> slides = pptxReader.readSlides(inputFile);
-
             output.println("Generating text files...");
             List<GeneratedTextArtifact> textArtifacts = textArtifactGenerator.generate(slides);
 
@@ -82,6 +89,15 @@ public class DeckXApplication {
             List<GeneratedImageArtifact> imageArtifacts = imageArtifactGenerator.generate(slides);
 
             output.println("Writing output files...");
+            output.println("Checking for an existing output folder: " + OUTPUT_FOLDER);
+
+            if (outputFolderHasContents(outputFolder)) {
+                output.println("Found existing output folder: " + OUTPUT_FOLDER);
+                output.println("Removing old contents from output folder: " + OUTPUT_FOLDER);
+            } else {
+                output.println("No existing output folder contents found: " + OUTPUT_FOLDER);
+            }
+
             outputFolderCleaner.clean(outputFolder);
             outputWriter.write(outputFolder, textArtifacts, imageArtifacts);
 
@@ -95,6 +111,16 @@ public class DeckXApplication {
         } catch (IOException exception) {
             error.println("DeckX failed: " + exception.getMessage());
             return 1;
+        }
+    }
+
+    private boolean outputFolderHasContents(Path outputFolder) throws IOException {
+        if (!Files.isDirectory(outputFolder)) {
+            return false;
+        }
+
+        try (var children = Files.list(outputFolder)) {
+            return children.findAny().isPresent();
         }
     }
 }

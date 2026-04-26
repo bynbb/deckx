@@ -44,17 +44,55 @@ class DeckXApplicationWorkflowTest {
 
         assertEquals(0, exitCode);
         assertEquals("", error.toString());
-        assertTrue(output.toString().contains("Processing complete."));
-        assertTrue(output.toString().contains("Output folder: test_data_presentation"));
-        assertTrue(output.toString().contains("Generated files: "));
         assertTrue(output.toString().contains("Generating text files..."));
         assertTrue(output.toString().contains("Generating image files..."));
         assertTrue(output.toString().contains("Writing output files..."));
+        assertTrue(output.toString().contains("Checking for an existing output folder: test_data_presentation"));
+        assertTrue(output.toString().contains("No existing output folder contents found: test_data_presentation"));
+        assertTrue(output.toString().contains("Processing complete."));
+        assertTrue(output.toString().contains("Output folder: test_data_presentation"));
+        assertTrue(output.toString().contains("Generated files: "));
         assertTrue(Files.isDirectory(outputFolder));
         assertTrue(Files.isRegularFile(outputFolder.resolve("slide_01__title.txt")));
         assertTrue(Files.isRegularFile(outputFolder.resolve("slide_01__author.txt")));
         try (var files = Files.list(outputFolder)) {
             assertTrue(files.anyMatch(path -> path.getFileName().toString().endsWith(".png")));
         }
+    }
+
+    // DeckX reports rerun cleanup when old output exists before writing current generated files.
+    @Test
+    void runReportsExistingOutputCleanupBeforeRerun() throws Exception {
+        URI resourceUri = getClass().getResource("/test_data_presentation.pptx").toURI();
+        Path sourcePptx = Path.of(resourceUri);
+        Path runtimePptx = tempDir.resolve("test_data_presentation.pptx");
+        Files.copy(sourcePptx, runtimePptx);
+
+        Path outputFolder = tempDir.resolve("test_data_presentation");
+        Files.createDirectories(outputFolder);
+        Files.writeString(outputFolder.resolve("old.txt"), "old output");
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ByteArrayOutputStream error = new ByteArrayOutputStream();
+
+        DeckXApplication application = new DeckXApplication(
+                tempDir,
+                new PrintStream(output),
+                new PrintStream(error),
+                new PptxReader(),
+                new TextArtifactGenerator(),
+                new ImageArtifactGenerator(),
+                new OutputFolderCleaner(),
+                new OutputWriter()
+        );
+
+        int exitCode = application.run();
+
+        assertEquals(0, exitCode);
+        assertEquals("", error.toString());
+        assertTrue(output.toString().contains("Checking for an existing output folder: test_data_presentation"));
+        assertTrue(output.toString().contains("Found existing output folder: test_data_presentation"));
+        assertTrue(output.toString().contains("Removing old contents from output folder: test_data_presentation"));
+        assertTrue(Files.notExists(outputFolder.resolve("old.txt")));
     }
 }
