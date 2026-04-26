@@ -1,6 +1,7 @@
 package deckx;
 
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
+import org.apache.poi.xslf.usermodel.XSLFPictureShape;
 import org.apache.poi.xslf.usermodel.XSLFShape;
 import org.apache.poi.xslf.usermodel.XSLFTextShape;
 
@@ -17,8 +18,9 @@ class PptxReader {
 
             for (int index = 0; index < presentation.getSlides().size(); index++) {
                 List<String> textLines = new ArrayList<>();
+                List<byte[]> imageBytes = new ArrayList<>();
 
-                // POI is the boundary where PowerPoint slide shapes become DeckX slide text.
+                // POI is the boundary where PowerPoint slide shapes become DeckX slide content.
                 for (XSLFShape shape : presentation.getSlides().get(index).getShapes()) {
                     if (shape instanceof XSLFTextShape textShape) {
                         String text = textShape.getText();
@@ -27,9 +29,13 @@ class PptxReader {
                             textLines.add(text.trim());
                         }
                     }
+
+                    if (shape instanceof XSLFPictureShape pictureShape) {
+                        imageBytes.add(pictureShape.getPictureData().getData());
+                    }
                 }
 
-                slides.add(new SlideRecord(index + 1, textLines));
+                slides.add(new SlideRecord(index + 1, textLines, imageBytes));
             }
 
             return slides;

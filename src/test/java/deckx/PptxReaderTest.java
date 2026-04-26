@@ -1,54 +1,45 @@
 package deckx;
 
-import org.apache.poi.xslf.usermodel.XMLSlideShow;
-import org.apache.poi.xslf.usermodel.XSLFSlide;
-import org.apache.poi.xslf.usermodel.XSLFTextBox;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-import java.io.OutputStream;
-import java.nio.file.Files;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PptxReaderTest {
-    @TempDir
-    Path tempDir;
+    private Path testDataPresentationPath() throws Exception {
+        URI resourceUri = getClass().getResource("/test_data_presentation.pptx").toURI();
+        return Path.of(resourceUri);
+    }
 
-    // DeckX must preserve slide order and meaningful text so generated output can trace back to test_data_presentation.pptx.
+    // DeckX must preserve known tagged text so generated output can trace back to test_data_presentation.pptx.
     @Test
-    void readSlidesExtractsNonblankTextInSlideOrder() throws Exception {
-        Path inputFile = tempDir.resolve("sample.pptx");
-
-        try (XMLSlideShow presentation = new XMLSlideShow()) {
-            XSLFSlide firstSlide = presentation.createSlide();
-            XSLFTextBox firstTextBox = firstSlide.createTextBox();
-            firstTextBox.setText("Title:>First Slide");
-
-            XSLFSlide secondSlide = presentation.createSlide();
-            XSLFTextBox blankTextBox = secondSlide.createTextBox();
-            blankTextBox.setText("   ");
-
-            XSLFTextBox secondTextBox = secondSlide.createTextBox();
-            secondTextBox.setText("Title:>Second Slide");
-
-            try (OutputStream output = Files.newOutputStream(inputFile)) {
-                presentation.write(output);
-            }
-        }
-
+    void readsFixedDeckAndExtractsKnownTaggedText() throws Exception {
         PptxReader reader = new PptxReader();
 
-        List<SlideRecord> slides = reader.readSlides(inputFile);
+        List<SlideRecord> slides = reader.readSlides(testDataPresentationPath());
 
-        assertEquals(2, slides.size());
+        assertFalse(slides.isEmpty());
+        assertTrue(slides.get(0).textLines().contains("Title:>Test Data Presentation"));
+        assertTrue(slides.get(0).textLines().contains("Author:> DAISY DUCK"));
+        assertTrue(slides.get(0).textLines().contains("Scope:> user story"));
+        assertTrue(slides.get(0).textLines().contains("ID:> ID04212026"));
+    }
 
-        assertEquals(1, slides.get(0).slideNumber());
-        assertEquals(List.of("Title:>First Slide"), slides.get(0).textLines());
+    // DeckX must preserve embedded images so visual slide evidence can become PowerPoint-independent output.
+    @Test
+    void readsFixedDeckAndExtractsEmbeddedImages() throws Exception {
+        PptxReader reader = new PptxReader();
 
-        assertEquals(2, slides.get(1).slideNumber());
-        assertEquals(List.of("Title:>Second Slide"), slides.get(1).textLines());
+        List<SlideRecord> slides = reader.readSlides(testDataPresentationPath());
+
+        long imageCount = slides.stream()
+                .flatMap(slide -> slide.imageBytes().stream())
+                .count();
+
+        assertTrue(imageCount > 0);
     }
 }

@@ -2,5 +2,5 @@ package deckx;
 
 import java.util.List;
 
-record SlideRecord(int slideNumber, List<String> textLines) {
+record SlideRecord(int slideNumber, List<String> textLines, List<byte[]> imageBytes) {
 }
