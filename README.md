@@ -113,4 +113,4 @@ Potential future work could include:
 
 ## License
 
-No license has been specified yet.
+DeckX is released under the MIT License. See the `LICENSE` file for details.
