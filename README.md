@@ -1,5 +1,7 @@
 # DeckX
 
+[![Validate Windows Build](https://github.com/bynbb/deckx/actions/workflows/validate-windows-build.yml/badge.svg)](https://github.com/bynbb/deckx/actions/workflows/validate-windows-build.yml)
+
 DeckX is a small Java console application that extracts readable text files and image files from a prepared PowerPoint deck.
 
 It was built as a focused proof-of-concept for transforming presentation content into simple file-system artifacts that can be inspected, searched, or reused outside PowerPoint.

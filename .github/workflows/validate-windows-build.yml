@@ -1,4 +1,4 @@
-name: Validate Submitted Windows Build
+name: Validate Windows Build
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     - cron: "0 8 * * *"
 
 jobs:
-  validate-submitted-windows-build:
+  validate-windows-build:
     runs-on: windows-latest
 
     steps:
