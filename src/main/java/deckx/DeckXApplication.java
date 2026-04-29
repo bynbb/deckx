@@ -83,7 +83,14 @@ public class DeckXApplication {
 
             // The runtime turns the golden example deck into PowerPoint-independent text and image artifacts.
             output.println("Generating text files...");
-            List<GeneratedTextArtifact> textArtifacts = textArtifactGenerator.generate(slides);
+            List<GeneratedTextArtifact> textArtifacts;
+
+            try {
+                textArtifacts = textArtifactGenerator.generate(slides);
+            } catch (IllegalArgumentException exception) {
+                error.println("DeckX failed: invalid tagged text.");
+                return 1;
+            }
 
             output.println("Generating image files...");
             List<GeneratedImageArtifact> imageArtifacts = imageArtifactGenerator.generate(slides);

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TextArtifactGeneratorTest {
     // DeckX names text artifacts from slide number and tag so each file can be traced back to deck content.
@@ -59,5 +60,18 @@ class TextArtifactGeneratorTest {
         List<GeneratedTextArtifact> artifacts = generator.generate(List.of(slide));
 
         assertEquals("slide_02__sequence.txt", artifacts.get(0).fileName());
+    }
+
+    @Test
+    void generateThrowsWhenMissingTagDelimiter() {
+        SlideRecord slide = new SlideRecord(
+                1,
+                List.of("Malformed tag with no delimiter"),
+                List.of()
+        );
+        TextArtifactGenerator generator = new TextArtifactGenerator();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> generator.generate(List.of(slide)));
     }
 }

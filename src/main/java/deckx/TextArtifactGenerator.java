@@ -24,9 +24,12 @@ class TextArtifactGenerator {
 
     private String normalizedTagFrom(String textLine) {
         int delimiterIndex = textLine.indexOf(":>");
-        String rawTag = delimiterIndex >= 0
-                ? textLine.substring(0, delimiterIndex)
-                : textLine;
+
+        if (delimiterIndex < 0) {
+            throw new IllegalArgumentException("Tagged text is invalid.");
+        }
+
+        String rawTag = textLine.substring(0, delimiterIndex);
 
         return rawTag.trim().toLowerCase(Locale.ROOT);
     }
