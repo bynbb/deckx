@@ -1,0 +1,111 @@
+name: Validate Submitted Windows Build
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * *"
+
+jobs:
+  validate-submitted-windows-build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Show environment
+        shell: cmd
+        run: |
+          java -version
+          where java
+          dir
+
+      - name: Create submitted build layout
+        shell: cmd
+        run: |
+          mkdir ci-work
+          mkdir ci-work\build_it_then_use_it
+          mkdir ci-work\build_it_then_use_it\deckx
+
+          robocopy . ci-work\build_it_then_use_it\deckx /E /XD .git target test_data_presentation ci-work /XF build-deckx.cmd test_data_presentation.pptx
+          if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
+
+          copy ci\submitted-windows-build\build-deckx.cmd ci-work\build_it_then_use_it\build-deckx.cmd
+
+          copy ci\submitted-windows-build\test_data_presentation.pptx ci-work\build_it_then_use_it\test_data_presentation.pptx
+
+          if not exist ci-work\build_it_then_use_it\deckx\src\test\resources (
+            mkdir ci-work\build_it_then_use_it\deckx\src\test\resources
+          )
+
+          copy ci\submitted-windows-build\test_data_presentation.pptx ci-work\build_it_then_use_it\deckx\src\test\resources\test_data_presentation.pptx
+
+      - name: Show submitted build layout
+        shell: cmd
+        working-directory: ci-work\build_it_then_use_it
+        run: |
+          dir
+          dir deckx
+          dir deckx\src\test\resources
+
+      - name: Run submitted Windows build script
+        shell: cmd
+        working-directory: ci-work\build_it_then_use_it
+        run: build-deckx.cmd
+
+      - name: Verify jar exists
+        shell: cmd
+        working-directory: ci-work\build_it_then_use_it
+        run: |
+          if not exist deckx\target\DeckX-1.0-SNAPSHOT.jar (
+            echo Expected jar was not created.
+            exit /b 1
+          )
+
+      - name: Run generated jar
+        shell: cmd
+        working-directory: ci-work\build_it_then_use_it
+        run: java -jar deckx\target\DeckX-1.0-SNAPSHOT.jar
+
+      - name: Verify output folder exists
+        shell: cmd
+        working-directory: ci-work\build_it_then_use_it
+        run: |
+          if not exist test_data_presentation (
+            echo Expected output folder was not created.
+            exit /b 1
+          )
+          dir test_data_presentation
+
+      - name: Verify text output exists
+        shell: cmd
+        working-directory: ci-work\build_it_then_use_it
+        run: |
+          dir test_data_presentation\*.txt >nul 2>nul
+          if errorlevel 1 (
+            echo Expected at least one generated .txt file.
+            exit /b 1
+          )
+
+      - name: Verify image output exists
+        shell: cmd
+        working-directory: ci-work\build_it_then_use_it
+        run: |
+          dir test_data_presentation\*.png >nul 2>nul
+          if errorlevel 1 (
+            echo Expected at least one generated .png file.
+            exit /b 1
+          )
+
+      - name: Upload generated output
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deckx-generated-output
+          path: ci-work/build_it_then_use_it/test_data_presentation
