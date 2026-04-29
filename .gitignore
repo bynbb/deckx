@@ -1,4 +1,6 @@
 ### User Added ###
+/test_data_presentation/
+/ci-work/
 .idea
 dependency-reduced-pom.xml
 
