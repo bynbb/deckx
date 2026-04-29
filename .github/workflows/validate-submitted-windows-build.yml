@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -102,10 +102,3 @@ jobs:
             echo Expected at least one generated .png file.
             exit /b 1
           )
-
-      - name: Upload generated output
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: deckx-generated-output
-          path: ci-work/build_it_then_use_it/test_data_presentation
