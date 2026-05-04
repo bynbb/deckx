@@ -3,6 +3,7 @@
 /ci-work/
 .idea
 dependency-reduced-pom.xml
+/pm/
 
 ### Generated ###
 target/
